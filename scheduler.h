@@ -1,9 +1,15 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-class Scheduler{
-public:
+#include <queue>
+#include <functional>
 
+using std::queue;
+
+class Scheduler{
+	queue<unsigned long int> tasks;
+public:
+	
 };
 
 #endif
