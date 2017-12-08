@@ -1,20 +1,11 @@
-#include "scheduler.h"
 #include "/home/jouny/Documents/oop/prime_factorizator/pf.h"
 #include <string>
 #include <exception>
 #include <iostream>
+#include <queue>
+#include <thread>
 
 using namespace std;
-
-template <class ...args>
-void func(args...){
-
-}
-
-template <class ...args>
-void call(args...){
-	// func(args...);
-}
 
 unsigned long stoint(const string& s){
 	unsigned long result = 0;
@@ -27,20 +18,56 @@ unsigned long stoint(const string& s){
 	return result;
 }
 
+
+class Calculator : public thread{
+	using thread::thread;
+	bool running;
+	queue<unsigned long int> numbers;
+public:
+
+	Calculator() : thread(&Calculator::run, this) {}
+
+	void push(unsigned long int number){
+		numbers.push(number);
+	}
+
+	void run(){
+		running = true;
+		while (running) {
+			if (!numbers.empty()){
+				cout << PFact(numbers.front()) << '\n';
+				numbers.pop();
+			}
+		}
+	}
+
+	void stop(){
+		running = false;
+		while (!numbers.empty())
+			numbers.pop();
+	}
+};
+
+
 int main(int argc, char const *argv[]){
-	Scheduler sched;
+	Calculator calc;
 
-	// call(0,1,2);
-
-    for (string line; getline(cin, line);){
+	unsigned int number = 0;
+	for (string line; getline(cin, line);){
+		if (line == "exit"){
+			calc.stop();
+			break;
+		}
 		try{
-			unsigned int number = stoint(line);
+			number = stoint(line);
 		} catch (invalid_argument ex){
 			cerr << ex.what() << '\n';
 			continue;
 		}
-		// sched.addtask
-		cout << PFact(stoint(line)) << '\n';
-    }
+		calc.push(number);
+	}
+
+	calc.join();
+
 	return 0;
 }
