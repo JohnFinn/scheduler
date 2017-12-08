@@ -4,6 +4,8 @@
 #include <iostream>
 #include <queue>
 #include <thread>
+#include <condition_variable>
+#include <functional>
 
 using namespace std;
 
@@ -23,28 +25,36 @@ class Calculator : public thread{
 	using thread::thread;
 	bool running;
 	queue<unsigned long int> numbers;
+	condition_variable cond;
+	mutex mu_numbers;
 public:
 
 	Calculator() : thread(&Calculator::run, this) {}
 
 	void push(unsigned long int number){
+		unique_lock<mutex> ul(mu_numbers);
 		numbers.push(number);
+		ul.unlock();
+		cond.notify_one();
 	}
 
 	void run(){
 		running = true;
 		while (running) {
-			if (!numbers.empty()){
-				cout << PFact(numbers.front()) << '\n';
-				numbers.pop();
-			}
+			unique_lock<mutex> ul(mu_numbers);
+			cond.wait(ul, [&](){ return !numbers.empty() or !running; });
+			if (!running)
+				break;
+
+			cout << PFact(numbers.front()) << '\n';
+
+			numbers.pop();
 		}
 	}
 
 	void stop(){
 		running = false;
-		while (!numbers.empty())
-			numbers.pop();
+		cond.notify_one();
 	}
 };
 
@@ -67,6 +77,7 @@ int main(int argc, char const *argv[]){
 		calc.push(number);
 	}
 
+	calc.stop();
 	calc.join();
 
 	return 0;
