@@ -34,7 +34,7 @@ public:
 		process = func;
 	}
 
-	void push(type number){
+	void push(type number) noexcept {
 		unique_lock<mutex> ul(mu_numbers);
 		numbers.push(number);
 		ul.unlock();
@@ -50,25 +50,26 @@ public:
 			if (numbers.empty())
 				break;
 
-			// cout << PFact(numbers.front()) << '\n';
 			process(numbers.front());
 
 			numbers.pop();
 		}
 	}
 
-	void stop(){
+	void stop() noexcept {
 		running = false;
 		cond.notify_one();
 	}
 
-	void pause(){
+	void pause() noexcept {
 		paused = true;
 	}
 
-	void resume(){
-		paused = false;
-		cond.notify_one();
+	void resume() noexcept {
+		if (paused){
+			paused = false;
+			cond.notify_one();
+		}
 	}
 };
 
@@ -77,10 +78,11 @@ int main(int argc, char const *argv[]){
 	Calculator<unsigned long int> calc([&](unsigned long int i){ cout << PFact(i) << '\n'; });
 
 	unsigned int number = 0;
-	for (string line; getline(cin, line);){
-		if (line == "exit")
+	for (string line; getline(cin, line, '\n');){
+		if (line == "exit"){
+			calc.stop();
 			break;
-		else if (line == "pause"){
+		} else if (line == "pause"){
 			calc.pause();
 			continue;
 		} else if (line == "resume"){
@@ -97,7 +99,6 @@ int main(int argc, char const *argv[]){
 		calc.push(number);
 	}
 
-	calc.stop();
 	calc.join();
 
 	return 0;
