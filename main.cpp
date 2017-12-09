@@ -22,12 +22,14 @@ unsigned long stoint(const string& s){
 
 template <class type>
 class Calculator : public thread{
+public:
 	function<void(type)> process;
 	bool running;
 	bool paused;
-	queue<type> numbers;
+	bool quit;
+	queue<type> tasks;
 	condition_variable cond;
-	mutex mu_numbers;
+	mutex mu_tasks;
 public:
 
 	Calculator(function<void(type)> func) : thread(&Calculator::run, this) {
@@ -35,25 +37,39 @@ public:
 	}
 
 	void push(type number) noexcept {
-		unique_lock<mutex> ul(mu_numbers);
-		numbers.push(number);
+		unique_lock<mutex> ul(mu_tasks);
+		tasks.push(number);
 		ul.unlock();
 		cond.notify_one();
 	}
 
 	void run(){
 		running = true;
-		paused = false;
+		quit = paused = false;
 		while (running) {
-			unique_lock<mutex> ul(mu_numbers);
-			cond.wait(ul, [&](){ return !paused and (!numbers.empty() or !running); });
-			if (numbers.empty())
+			unique_lock<mutex> ul(mu_tasks);
+			cond.wait(ul, [&](){ return quit or (!paused and (!tasks.empty() or !running)); });
+			if (tasks.empty())
 				break;
 
-			process(numbers.front());
+			if (quit){
+				while (!tasks.empty()){
+					process(tasks.front());
+					tasks.pop();
+				}
+				break;
+			}
 
-			numbers.pop();
+			process(tasks.front());
+
+			tasks.pop();
 		}
+	}
+
+	void join(){
+		quit = true;
+		cond.notify_one();
+		thread::join();
 	}
 
 	void stop() noexcept {
@@ -99,6 +115,8 @@ int main(int argc, char const *argv[]){
 		calc.push(number);
 	}
 
+	// need to wait for else's
+	// calc.wait();
 	calc.join();
 
 	return 0;
