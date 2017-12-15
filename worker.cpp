@@ -45,7 +45,7 @@ public:
 			tasks.pop();
 			process(task);
 		}
-		if (qmu_tasksuit)
+		if (quit)
 			while (!tasks.empty()){
 				process(tasks.front());
 				tasks.pop();
