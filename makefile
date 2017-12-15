@@ -1,8 +1,8 @@
 a.out: main.o pfact.o
-	g++ $^ -std=c++17 -pthread
-main.o: main.cpp
-	g++ main.cpp -c -std=c++17
+	c++ $^ -std=c++17 -pthread -g
+main.o: main.cpp worker.cpp
+	c++ main.cpp -c -std=c++17 -g
 pfact.o: ~/Documents/oop/prime_factorizator/pf.cpp ~/Documents/oop/prime_factorizator/pf.h
-	g++ -c ~/Documents/oop/prime_factorizator/pf.cpp -std=c++17 -o $@
+	c++ -c ~/Documents/oop/prime_factorizator/pf.cpp -std=c++17 -o $@
 clean:
 	rm main.o pfact.o a.out
