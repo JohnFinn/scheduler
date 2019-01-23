@@ -1,8 +1,20 @@
-a.out: main.o pfact.o
-	c++ $^ -std=c++17 -pthread -g
-main.o: main.cpp worker.cpp
-	c++ main.cpp -c -std=c++17 -g
-pfact.o: ~/Documents/oop/prime_factorizator/pf.cpp ~/Documents/oop/prime_factorizator/pf.h
-	c++ -c ~/Documents/oop/prime_factorizator/pf.cpp -std=c++17 -o $@
+default: test
+
+worker.so: worker.cpp
+	clang++ $^ -c -o $@ -std=c++17
+
+worker_test: worker.so test.cpp
+	clang++ $^ -o $@ -lpthread -lgtest -std=c++17
+
+test: worker_test
+	./worker_test
+
 clean:
-	rm main.o pfact.o a.out
+	rm worker.so worker_test
+
+install: worker.so worker.h
+	ln worker.so /lib/libworker.so
+	ln worker.h /usr/include/worker.h
+
+uninstall: 
+	rm /lib/libworker.so /usr/include/worker.h
