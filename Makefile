@@ -18,9 +18,10 @@ test: build/worker_test
 clean:
 	rm -r build
 
-install: worker.so worker.h
-	ln worker.so /lib/libworker.so
-	ln worker.h /usr/include/worker.h
+install: build/libworker.a worker.h detaching_worker.h
+	ln $< /lib
+	mkdir /usr/include/worker
+	ln worker.h detaching_worker.h /usr/include/worker
 
 uninstall: 
-	rm /lib/libworker.so /usr/include/worker.h
+	rm -r /lib/libworker.a /usr/include/worker
