@@ -2,6 +2,7 @@ installation
 ```
 git clone https://github.com/JohnFinn/worker.git
 cd worker
+mkdir build
 make test
 make install
 ```
